@@ -1,26 +1,17 @@
-// main.ts — news-image-20261118, round 2 ("The World Today").
-// The entry is a pre-composed front page (entry.png, 1024x1024). This
-// program copies it byte-for-byte to the output directory, so both graded
-// runs produce identical bytes. Plain JavaScript in a .ts file: no
-// TypeScript-only syntax, so it runs under Node's type stripping.
-import { copyFileSync, mkdirSync, existsSync, statSync } from "node:fs";
-import { join, dirname } from "node:path";
+// news-image-20261118 round 3: copy the composed front page to the output dir.
+// The image is built by compose.py (PIL) and committed as entry.png; this
+// program only copies those bytes, so repeated runs are byte-identical.
+import { copyFileSync, existsSync, mkdirSync, statSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-const src = join(here, "entry.png");
-
-if (!existsSync(src)) {
-  throw new Error("entry.png missing next to main.ts — nothing to copy");
-}
-
+const outDir = process.env.MAKEFUN_OUTPUT_DIR || "/output";
 mkdirSync(outDir, { recursive: true });
-const dest = join(outDir, "entry.png");
-copyFileSync(src, dest);
-
-// Fail loudly instead of shipping a truncated copy: the gate rejects a
-// partial PNG, and both graded runs must carry the same bytes.
-if (statSync(src).size !== statSync(dest).size) {
-  throw new Error("entry.png copy size mismatch — refusing to continue");
+const src = join(here, "entry.png");
+if (!existsSync(src)) {
+  throw new Error("entry.png missing next to main.ts");
 }
+copyFileSync(src, join(outDir, "entry.png"));
+const bytes = statSync(join(outDir, "entry.png")).size;
+console.log(`entry.png copied to ${outDir} (${bytes} bytes)`);
